@@ -207,8 +207,16 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        # 算法参考 https://arxiv.org/pdf/1502.03167.pdf 里的 Algorithm 1
+        mean = np.mean(x,axis = 0)
+        var = np.var(x,axis = 0)
+        xhat = (x-mean) / (np.sqrt(var+eps))
+        out = gamma * xhat + beta
 
+        running_mean = momentum * running_mean + (1-momentum) * mean
+        running_var = momentum * running_var + (1-momentum) * var
+
+        cache = (xhat,gamma,var,eps,x,mean)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
         #                           END OF YOUR CODE                          #
@@ -222,8 +230,8 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
-
+        xhat = (x-running_mean) / (np.sqrt(running_var+eps))
+        out = gamma * xhat + beta
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
         #                          END OF YOUR CODE                           #
@@ -263,9 +271,27 @@ def batchnorm_backward(dout, cache):
     # might prove to be helpful.                                              #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    xhat,gamma,var,eps,x,mean = cache
+    N = dout.shape[0]
+    xmmu = x - mean
+    stddev = np.sqrt(var + eps)
+    overstddev = (1 / stddev)
+    oness = np.ones(x.shape)
 
-    pass
+    dbeta = np.sum(dout,axis = 0)
+    dgamma = np.sum(xhat * dout,axis=0)
 
+    dxhat = gamma * dout
+    dxmmu =  overstddev * dxhat
+    doversig = np.sum(xmmu * dxhat, axis = 0)
+    dsig = (-1.0 / (var+eps)) * doversig
+    dsig2 = 0.5 * overstddev * dsig
+    dxmmu2 = (1.0/N) * oness * dsig2
+    dxmmup = 2 * xmmu * dxmmu2                      #p is for dxmmu'
+    ddiff = dxmmu + dxmmup
+    dx = ddiff
+    dmu = np.sum((-1 * ddiff), axis= 0)
+    dx += (1.0/N) * oness * dmu
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -310,7 +336,11 @@ def layernorm_forward(x, gamma, beta, ln_param):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    mean = np.mean(x, axis=1, keepdims=True)
+    var = np.var(x, axis=1, keepdims=True)
+    x_norm = (x-mean)/np.sqrt(var+eps)
+    out = gamma * x_norm + beta
+    cache = (x, x_norm, mean, var, gamma, eps)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -345,8 +375,20 @@ def layernorm_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    x, x_norm, layer_mean, layer_var, gamma, eps = cache
 
+    D = x.shape[1]
+    dgamma = np.sum(x_norm * dout, axis=0)
+    dbeta = np.sum(dout, axis=0)
+    dx_norm = dout * gamma
+    dlayer_var = -0.5 * np.sum(dx_norm*(x - layer_mean),
+                               axis=1, keepdims=True) / (layer_var + eps)**1.5
+    dlayer_mean = -np.sum(dx_norm / np.sqrt(layer_var +
+                          eps), axis=1, keepdims=True)
+    dx = dx_norm / np.sqrt(layer_var + eps)
+    dx += dlayer_mean / D
+    dx += dlayer_var * 2 * (x - layer_mean) / D
+    
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
