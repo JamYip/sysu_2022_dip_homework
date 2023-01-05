@@ -2,7 +2,7 @@
 
 代码参考：https://github.com/qxdn/cs231n-assignment
 
-实验报告见`final-project/report.ipynb`
+实验报告见`report.ipynb`或者`实验报告.md`
 
 ## 实验1 全连接神经网络(必做)
 依照 `FullConnectedNetwork.ipynb` 中的要求:
