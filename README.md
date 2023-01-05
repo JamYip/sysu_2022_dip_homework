@@ -30,5 +30,5 @@
 - [x]  实现spatialbatchnormalization
 
 ## 实验四 实现ConvNet(选做)
-- [ ] 根据 `ConvolutionalNetwork.ipynb` 中 Train your best model 的要求:
+- [x] 根据 `ConvolutionalNetwork.ipynb` 中 Train your best model 的要求:
 利用annp文件夹中的模块实现用于分类cifar-10数据集的卷积神经网络。需要注意的是，只能用annp文件夹中的模 块实现你的模型，不允许使用额外的深度学习框架，请在`annp/classifiers/cnn.py`中实现你的模型，在jupyter notebook对应位置实现你的训练过程，实验结果以及可视化分析。请各位同学仔细阅读annp文件夹中每个模块的用法。
